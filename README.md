@@ -1,4 +1,13 @@
+# ELK Install Notes
 
+Decisions:
+
+- Java 11
+- SYSLOG-NG and Logstash on the same box.
+- 3 Node elastic cluster.
+- One Kibana node.
+- Single core CPU.
+- 2048 RAM.
 
 Install information:
 
@@ -38,6 +47,8 @@ https://support.oneidentity.com/technical-documents/syslog-ng-premium-edition/7.
 Install Logstash:
 https://www.elastic.co/guide/en/logstash/7.5/pipeline.html
 
+If the config is not good, jvm crashes and cycles states, this caused the CPU to spike.
+
 ```bash
 [user@elk2 ~]$ systemctl status logstash
 ● logstash.service - logstash
@@ -48,3 +59,7 @@ https://www.elastic.co/guide/en/logstash/7.5/pipeline.html
            └─7122 /bin/java -Xms1g -Xmx1g -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly -Djava.awt.headless=true -Dfile.encoding=UTF-8 -Djruby.compile...
 [user@elk2 ~]$
 ```
+
+Install Elasticsearch:
+
+Noticed tcp6 was binding to 9200. So downloaded the role to disable all IPv6, but that probably wasn't necessary, as I actually had to initialise the host to listen on a dedicated port, and put in a seed device, then all the service started, and nmap showed the listening port.
