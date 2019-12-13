@@ -1,0 +1,9 @@
+---
+
+- hosts: all
+  vars:
+    ipv6_win_if: 'Ethernet 8'
+    ipv6_win_static_routes:
+      - { dst: '2001:db8:1:2::/64', gw: '2001:db8:1:1::1000', metric: 2 }
+  roles:
+    - juju4.ipv6

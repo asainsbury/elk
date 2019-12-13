@@ -1,0 +1,9 @@
+# BEGIN ANSIBLE MANAGED BLOCK
+---
+ssh_user: "user"
+ssh_home: "/home/user/"
+ssh_config: "~/.ssh/config"
+projects_root: "~/projects/scripts"
+ssh_pub: "~/.ssh/id_rsa.pub"
+ssh_priv: "~/.ssh/id_rsa" 
+# END ANSIBLE MANAGED BLOCK

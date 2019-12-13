@@ -1,0 +1,71 @@
+---
+# Create by a Jinja2 template#
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html#basic-tests
+# Was a heap of fun making this template!
+
+host_list:
+  - name: elk1
+    provider: virtualbox
+    group: elk
+    ip: 1.1.1.30
+    vm_name: elk1
+    mem: 2048
+    cpus: 1
+    box: "centos/7"
+    box_url: "https://vagrantcloud.com/centos/boxes/7"
+    bootstrap: "bootstrap.yml"
+    type: "linux"
+    state: "present"
+
+  - name: elk2
+    provider: virtualbox
+    group: elk
+    ip: 1.1.1.31
+    vm_name: elk2
+    mem: 2048
+    cpus: 1
+    box: "centos/7"
+    box_url: "https://vagrantcloud.com/centos/boxes/7"
+    bootstrap: "bootstrap.yml"
+    type: "linux"
+    state: "present"
+
+  - name: elk3
+    provider: virtualbox
+    group: elk
+    ip: 1.1.1.32
+    vm_name: elk3
+    mem: 2048
+    cpus: 1
+    box: "centos/7"
+    box_url: "https://vagrantcloud.com/centos/boxes/7"
+    bootstrap: "bootstrap.yml"
+    type: "linux"
+    state: "present"
+
+  - name: elk4
+    provider: virtualbox
+    group: elk
+    ip: 1.1.1.33
+    vm_name: elk4
+    mem: 2048
+    cpus: 1
+    box: "centos/7"
+    box_url: "https://vagrantcloud.com/centos/boxes/7"
+    bootstrap: "bootstrap.yml"
+    type: "linux"
+    state: "present"
+
+  - name: elk5
+    provider: virtualbox
+    group: elk
+    ip: 1.1.1.34
+    vm_name: elk5
+    mem: 1024
+    cpus: 1
+    box: "centos/7"
+    box_url: "https://vagrantcloud.com/centos/boxes/7"
+    bootstrap: "bootstrap.yml"
+    type: "linux"
+    state: "present"
+

@@ -1,0 +1,20 @@
+---
+galaxy_info:
+  author: juju4
+  description: Disable or Harden Linux IPv6 settings
+  license: BSD
+  min_ansible_version: 2.0
+  platforms:
+  - name: EL
+    versions:
+     - 6
+     - 7
+  - name: Ubuntu
+    versions:
+    - trusty
+    - xenial
+    - bionic
+  galaxy_tags:
+  - system
+  - security
+dependencies: []

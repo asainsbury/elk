@@ -1,0 +1,32 @@
+# Create by a Jinja2 template
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters_ipaddr.html#basic-tests
+# Was a heap of fun making this template!
+
+Host elk1 *.test.local
+  hostname 1.1.1.30
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+  User user
+  LogLevel ERROR
+
+Host elk2 *.test.local
+  hostname 1.1.1.31
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+  User user
+  LogLevel ERROR
+
+Host elk3 *.test.local
+  hostname 1.1.1.32
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+  User user
+  LogLevel ERROR
+
+Host elk4 *.test.local
+  hostname 1.1.1.33
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+  User user
+  LogLevel ERROR
+

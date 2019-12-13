@@ -1,0 +1,34 @@
+---
+
+- debug: var=ansible_distribution
+- name: Include version-specific variables for Ubuntu.
+  include_vars: "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"
+  when: ansible_distribution == 'Ubuntu'
+- name: Include version-specific variables for Debian.
+  include_vars: "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+  when: ansible_distribution == 'Debian'
+- name: Include version-specific variables for RedHat
+  include_vars: "RedHat-{{ ansible_distribution_version.split('.')[0] }}.yml"
+  when: ansible_os_family == "RedHat"
+- name: Include version-specific variables for Alpine
+  include_vars: "Alpine.yml"
+  when: ansible_os_family == "Alpine"
+
+- name: Check if IPv6 disabled at grub command line
+  command: cat /proc/cmdline
+  changed_when: false
+  ignore_errors: true
+  register: cmdline
+
+- debug: var=cmdline
+- debug: var=ansible_os_family
+- debug: var=ipv6_config
+- block:
+    - include: ipv6-harden.yml
+      when: ipv6_config is defined and ipv6_config == 'harden'
+    - include: ipv6-disable.yml
+      when: ipv6_config is not defined or ipv6_config == 'disable'
+  when: ansible_system == 'Linux' and not (' ipv6.disable=1' in cmdline.stdout)
+
+- include: windows-ipv6.yml
+  when: ansible_system == 'Win32NT'

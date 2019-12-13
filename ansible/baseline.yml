@@ -1,0 +1,180 @@
+---
+- hosts: elk
+  gather_facts: yes
+  become: true
+
+  roles:
+    - role: juju4.ipv6
+      tags: ip
+  
+  # Vagrant provison runs this file, so you don't actually need an inventory
+  # it does that for you.
+  # Basically we setup a bunch of environment stuff so we can ssh into the host
+  # Using all the data from all.yml
+  vars:
+    ssh_user: 'elk'
+
+  tasks:
+    - name: Create User
+      user:
+        name: "{{ssh_user}}"
+        password: "{{ 'password' | password_hash('sha512') }}"
+        shell: /bin/bash
+        append: yes
+        generate_ssh_key: yes
+        ssh_key_bits: 1024
+        ssh_key_file: .ssh/id_rsa
+      tags: ['user']
+
+
+    - name: upgrade all packages
+      yum:
+        name: '*'
+        state: latest
+        update_cache: yes
+      when: ansible_distribution == "CentOS"
+      tags: ['yum', 'update'] 
+    
+
+    - name: Install some default packages on all hosts
+      package:
+        name: ['vim', 'nmap', 'wget', 'curl', 'java-11-openjdk', 'tree', 'net-tools']
+        state: present 
+        update_cache: yes
+      tags: ['yum', 'packages']
+
+
+    - name: Add multiple repositories into the same file
+      yum_repository:
+        name: epel
+        description: EPEL YUM repo
+        file: external_repos
+        baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+        gpgcheck: no
+        state: present
+      tags: ['yum', 'epel']
+
+
+    - name: Add Elastic Repo
+      yum_repository:
+        name: elastic
+        description: Elastic YUM repo
+        file: external_repos
+        baseurl: https://artifacts.elastic.co/packages/7.x/yum
+        gpgcheck: yes
+        enabled: yes
+        gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        state: present
+      tags: ['yum', 'elastic']  
+
+- hosts: syslog
+  gather_facts: yes
+  become: true
+
+  tasks:
+    - name: Install Syslog-NG
+      package:
+        name: ['syslog-ng']
+        state: present 
+        update_cache: yes
+      tags: ['yum', 'packages', 'syslog-ng']  
+
+    - name: Creates directory
+      file:
+        path: '{{ syslog_ng_syslog_locations }}'
+        state: directory
+      tags: ['syslog', 'dir']
+  
+    - name: Enable Syslog-NG Service, and make sure it is running
+      service:
+        name: syslog-ng
+        state: started
+        enabled: yes
+      tags: ['syslog-ng', 'syslog']
+
+    - name: "Configure syslog-ng"
+      template:
+        backup: yes
+        src: '{{syslog_ng_template}}'
+        dest: '{{syslog_ng_config_file}}'
+      
+      notify:
+        - reload syslog-ng
+
+      tags: ['syslog', 'template']
+
+  handlers:
+    - name: restart syslog-ng
+      service: 
+        name: syslog-ng 
+        state: restarted
+
+    - name: reload syslog-ng
+      service: 
+        name: syslog-ng 
+        state: reloaded
+
+    - name: start syslog-ng
+      service: 
+        name: syslog-ng 
+        state: started
+
+- hosts: logstash
+  gather_facts: yes
+  become: true
+
+  tasks:
+    - name: Install logstash
+      package:
+        name: logstash
+        state: present 
+        update_cache: yes
+      tags: ['yum', 'packages', 'logstash']  
+
+    - name: Copy the logstash config file over, to stop runaway CPU
+      copy:
+        src: files/logstash.conf
+        dest: /etc/logstash/conf.d/
+      tags: ['logstash', 'files']
+
+    - name: Simple logstash config file
+      copy:
+        src: files/logstash.yml
+        dest: /etc/logstash/
+      tags: ['logstash', 'files']
+
+    - name: Enable logstash Service, and make sure it is running
+      service:
+        name: logstash
+        state: started
+        enabled: yes
+      tags: ['service', 'logstash']
+
+- hosts: elastic
+  gather_facts: yes
+  become: true
+
+  tasks:
+    - name: Install elasticsearch
+      package:
+        name: elasticsearch
+        state: present 
+        update_cache: yes
+      tags: ['yum', 'packages', 'elasticsearch']  
+
+    - name: Simple elasticsearch config file
+      copy:
+        src: files/elasticsearch.yml
+        dest: /etc/elasticsearch
+      tags: ['elasticsearch', 'files']
+
+    - name: Enable elasticsearch Service, and make sure it is running
+      service:
+        name: elasticsearch
+        state: restarted
+        enabled: yes
+      tags: ['service', 'elasticsearch', 'restart']
+
+
+
+      
