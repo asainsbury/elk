@@ -87,7 +87,10 @@ xpack.management.pipeline.id: ["paloalto", "cisco"]
 ```
 
 Install Elasticsearch:
-https://dzone.com/articles/elasticsearch-tutorial-creating-an-elasticsearch-c
+To Do
+vim /etc/sysconfig/elasticsearch
+MAX_LOCKED_MEMORY=unlimited
+
 
 Noticed tcp6 was binding to 9200. So downloaded the role to disable all IPv6, but that probably wasn't necessary, as I actually had to initialise the host to listen on a dedicated port, and put in a seed device, then all the service started, and nmap showed the listening port.
 
@@ -130,4 +133,32 @@ After running the initial setup, without configuration changes, you can check th
   "task_max_waiting_in_queue_millis" : 0,
   "active_shards_percent_as_number" : 100.0
 }
+
+curl http://1.1.1.32:9200/_cat/nodes
+1.1.1.33  9 88 1 0.35 0.42 0.26 dilm - elk4
+1.1.1.31 10 90 4 0.26 0.32 0.23 dilm * elk2
+1.1.1.32 11 90 4 0.61 0.38 0.25 dilm - elk3
+
+curl -XGET http://elk2:9200/_cluster/health?pretty
+{
+  "cluster_name" : "gary",
+  "status" : "green",
+  "timed_out" : false,
+  "number_of_nodes" : 3,
+  "number_of_data_nodes" : 3,
+  "active_primary_shards" : 1,
+  "active_shards" : 2,
+  "relocating_shards" : 0,
+  "initializing_shards" : 0,
+  "unassigned_shards" : 0,
+  "delayed_unassigned_shards" : 0,
+  "number_of_pending_tasks" : 0,
+  "number_of_in_flight_fetch" : 0,
+  "task_max_waiting_in_queue_millis" : 0,
+  "active_shards_percent_as_number" : 100.0
+}
 ```
+
+Install Kibana
+
+https://www.elastic.co/guide/en/kibana/current/rpm.html

@@ -1,0 +1,8 @@
+server.port: 5601
+server.host: {{ ansible_ssh_host }}
+server.name: {{ inventory_hostname }}
+elasticsearch.hosts: ["http://elk2:9200", "http://elk3:9200", "http://elk4:9200"]
+elasticsearch.requestTimeout: 30000
+elasticsearch.shardTimeout: 30000
+elasticsearch.startupTimeout: 5000
+logging.verbose: True

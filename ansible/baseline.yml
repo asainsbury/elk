@@ -251,5 +251,28 @@
       tags: ['service', 'restart', 'never', 'elasticsearch']
 
 
+- hosts: kibana
+  gather_facts: no
+  become: true
 
-      
+  tasks:
+    - name: Install kibana
+      package:
+        name: kibana
+        state: present 
+        update_cache: yes
+      tags: ['yum', 'packages', 'never'] 
+    
+    - name: "Configure kibana.yml"
+      template:
+        backup: yes
+        src: files/kibana.j2
+        dest: /etc/kibana/kibana.yml
+      tags: ['kibana', 'files', 'template']
+
+    - name: Enable kibana Service, and make sure it is running
+      service:
+        name: kibana
+        state: restarted
+        enabled: yes
+      tags: ['service', 'restart', 'never', 'kibana']
