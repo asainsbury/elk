@@ -60,6 +60,74 @@ If the config is not good, jvm crashes and cycles states, this caused the CPU to
 [user@elk2 ~]$
 ```
 
+```bash
+(elastic) ➜  logstash git:(master) ✗ egrep -v "#|^$" tdc1dapp0005/logstash.yml
+node.name: tdc1dapp0005
+path.data: /app/logstash/data
+pipeline.workers: 8
+pipeline.batch.size: 200
+pipeline.batch.delay: 50
+queue.type: memory
+config.test_and_exit: false
+config.reload.automatic: true
+config.reload.interval: 30s
+http.host: "10.202.16.17"
+http.port: 9600-9700
+xpack.monitoring.enabled: true
+xpack.monitoring.elasticsearch.url: [ "tdc1dapp0002", "tdc1dapp0003", "tdc2dapp0004" ]
+xpack.monitoring.elasticsearch.sniffing: true
+xpack.monitoring.collection.interval: 10s
+xpack.management.pipeline.id: ["paloalto", "cisco"]
+```
+
+```bash
+- pipeline.id: cisco
+  path.config: "/etc/logstash/conf.d/10-cisco*.conf"
+  pipeline.workers: 2
+```
+
 Install Elasticsearch:
+https://dzone.com/articles/elasticsearch-tutorial-creating-an-elasticsearch-c
 
 Noticed tcp6 was binding to 9200. So downloaded the role to disable all IPv6, but that probably wasn't necessary, as I actually had to initialise the host to listen on a dedicated port, and put in a seed device, then all the service started, and nmap showed the listening port.
+
+After running the initial setup, without configuration changes, you can check the status and health on each node:
+
+```bash
+[user@elk2 ~]$ curl -XGET 'http://localhost:9200'
+{
+  "name" : "elk2",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "Su_MoepAS-urO3esoa7VOg",
+  "version" : {
+    "number" : "7.5.0",
+    "build_flavor" : "default",
+    "build_type" : "rpm",
+    "build_hash" : "e9ccaed468e2fac2275a3761849cbee64b39519f",
+    "build_date" : "2019-11-26T01:06:52.518245Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.3.0",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+[user@elk2 ~]$ curl http://localhost:9200/_cluster/health?pretty
+{
+  "cluster_name" : "elasticsearch",
+  "status" : "green",
+  "timed_out" : false,
+  "number_of_nodes" : 1,
+  "number_of_data_nodes" : 1,
+  "active_primary_shards" : 0,
+  "active_shards" : 0,
+  "relocating_shards" : 0,
+  "initializing_shards" : 0,
+  "unassigned_shards" : 0,
+  "delayed_unassigned_shards" : 0,
+  "number_of_pending_tasks" : 0,
+  "number_of_in_flight_fetch" : 0,
+  "task_max_waiting_in_queue_millis" : 0,
+  "active_shards_percent_as_number" : 100.0
+}
+```

@@ -15,6 +15,26 @@
     ssh_user: 'elk'
 
   tasks:
+    - name: Remove file (delete file)
+      file:
+        path: /etc/hosts
+        state: absent
+      tags: ['hostsfile', 'never']
+
+
+    - name: Update /etc/hosts
+      become: true
+      blockinfile:
+          path: /etc/hosts
+          create: yes
+          block: |
+            127.0.0.1 localhost
+
+            {% for item in ansible_play_batch %}
+            {{ hostvars[item].ansible_ssh_host }}   {{ item }}    
+            {% endfor %}
+      tags: ['hostsfile']
+
     - name: Create User
       user:
         name: "{{ssh_user}}"
@@ -38,7 +58,7 @@
 
     - name: Install some default packages on all hosts
       package:
-        name: ['vim', 'nmap', 'wget', 'curl', 'java-11-openjdk', 'tree', 'net-tools']
+        name: ['vim', 'nmap', 'wget', 'curl', 'java-11-openjdk', 'tree', 'net-tools', 'git']
         state: present 
         update_cache: yes
       tags: ['yum', 'packages']
@@ -155,6 +175,54 @@
   become: true
 
   tasks:
+    # - name: Enable elasticsearch Service, and make sure it is running
+    #   service:
+    #     name: elasticsearch
+    #     state: stopped
+    #     enabled: yes
+    #   tags: ['service', 'restart', 'never', 'elasticsearch']
+
+    # - name: Remove file (delete file)
+    #   file:
+    #     path: /var/lib/elasticsearch/
+    #     state: absent
+    #   tags: ['elasticsearch', 'never']
+
+    # - name: Make sure files exist (delete file)
+    #   file:
+    #     path: '{{ item }}'
+    #     state: directory
+    #     owner: elasticsearch
+    #     group: elasticsearch
+    #     mode: '0644'
+    #     recurse: yes
+    #   with_items:
+    #     - /var/lib/elasticsearch/
+    #     - /var/lib/elasticsearch/nodes
+    #   tags: ['elasticsearch', 'never']
+
+    # - name: Creates directory
+    #   file:
+    #     path: '{{ item }}'
+    #     state: directory
+    #     owner: elasticsearch
+    #     group: elasticsearch
+    #     mode: '0644'
+    #   with_items:
+    #     - /app/es/data
+    #     - /app/es/log
+    #   tags: ['elasticsearch', 'dir']
+
+    - name: Creates directory
+      file:
+        path: /app
+        state: directory
+        owner: elasticsearch
+        group: elasticsearch
+        mode: '764'
+        recurse: yes
+      tags: ['elasticsearch', 'dir']
+
     - name: Install elasticsearch
       package:
         name: elasticsearch
@@ -162,18 +230,25 @@
         update_cache: yes
       tags: ['yum', 'packages', 'elasticsearch']  
 
-    - name: Simple elasticsearch config file
-      copy:
-        src: files/elasticsearch.yml
-        dest: /etc/elasticsearch
-      tags: ['elasticsearch', 'files']
+    # - name: Simple elasticsearch config file
+    #   copy:
+    #     src: files/elasticsearch.yml
+    #     dest: /etc/elasticsearch
+    #   tags: ['elasticsearch', 'files']
+
+    - name: "Configure elasticsearch.yml"
+      template:
+        backup: yes
+        src: files/elastic.j2
+        dest: /etc/elasticsearch/elasticsearch.yml
+      tags: ['elasticsearch', 'files', 'template']
 
     - name: Enable elasticsearch Service, and make sure it is running
       service:
         name: elasticsearch
         state: restarted
         enabled: yes
-      tags: ['service', 'elasticsearch', 'restart']
+      tags: ['service', 'restart', 'never', 'elasticsearch']
 
 
 
