@@ -10,8 +10,10 @@ discovery.zen.ping.unicast.hosts: ["elk2", "elk3", "elk4"]
 discovery.zen.fd.ping_timeout: 10s
 discovery.zen.minimum_master_nodes: 2
 xpack.monitoring.collection.enabled: true
+{# xpack.security.enabled: true
+xpack.security.transport.ssl.enabled: true #}
+bootstrap.memory_lock: true
 cluster.initial_master_nodes:
   - elk2
   - elk3
   - elk4
-{# bootstrap.mlockall: true #}

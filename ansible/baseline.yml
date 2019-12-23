@@ -87,6 +87,7 @@
         state: present
       tags: ['yum', 'elastic']  
 
+
 - hosts: syslog
   gather_facts: yes
   become: true
@@ -171,48 +172,16 @@
       tags: ['service', 'logstash']
 
 - hosts: elastic
-  gather_facts: yes
+  gather_facts: false
   become: true
 
+  vars:
+    es_version: 7.5.1
+    es_log_dir: /app/el/log
+    es_jvm_custom_parameters: ''
+    es_heap_size: "1g"
+  
   tasks:
-    # - name: Enable elasticsearch Service, and make sure it is running
-    #   service:
-    #     name: elasticsearch
-    #     state: stopped
-    #     enabled: yes
-    #   tags: ['service', 'restart', 'never', 'elasticsearch']
-
-    # - name: Remove file (delete file)
-    #   file:
-    #     path: /var/lib/elasticsearch/
-    #     state: absent
-    #   tags: ['elasticsearch', 'never']
-
-    # - name: Make sure files exist (delete file)
-    #   file:
-    #     path: '{{ item }}'
-    #     state: directory
-    #     owner: elasticsearch
-    #     group: elasticsearch
-    #     mode: '0644'
-    #     recurse: yes
-    #   with_items:
-    #     - /var/lib/elasticsearch/
-    #     - /var/lib/elasticsearch/nodes
-    #   tags: ['elasticsearch', 'never']
-
-    # - name: Creates directory
-    #   file:
-    #     path: '{{ item }}'
-    #     state: directory
-    #     owner: elasticsearch
-    #     group: elasticsearch
-    #     mode: '0644'
-    #   with_items:
-    #     - /app/es/data
-    #     - /app/es/log
-    #   tags: ['elasticsearch', 'dir']
-
     - name: Creates directory
       file:
         path: /app
@@ -229,12 +198,46 @@
         state: present 
         update_cache: yes
       tags: ['yum', 'packages', 'elasticsearch']  
+    
+    - name: Set Ulimit File descriptor
+      lineinfile:
+        path: /etc/security/limits.conf
+        state: present
+        line: 'elasticsearch  -  nofile  65535'
+      tags: ['elasticsearch', 'line']
 
-    # - name: Simple elasticsearch config file
-    #   copy:
-    #     src: files/elasticsearch.yml
-    #     dest: /etc/elasticsearch
-    #   tags: ['elasticsearch', 'files']
+    - name: Sysconfig setting for mem locking (disable swap part 1 of 4)
+      blockinfile:
+        state: present
+        path: /etc/sysconfig/elasticsearch
+        block: |
+          ES_JAVA_OPTS="-Xms{{es_heap_size}} -Xmx{{es_heap_size}}" 
+          MAX_LOCKED_MEMORY=unlimited
+      tags: ['elasticsearch', 'files', 'template']
+
+
+    - name: Security limits setting for mem locking (disable swap part 2 of 4)
+      blockinfile:
+        state: present
+        path: /etc/security/limits.conf
+        block: |
+          elasticsearch soft memlock unlimited
+          elasticsearch hard memlock unlimited
+      tags: ['elasticsearch', 'files', 'template']
+
+    - name: Service modify for elasticsearch (disable swap part 3 of 4)
+      lineinfile:
+        path: /usr/lib/systemd/system/elasticsearch.service
+        state: present
+        insertafter: Service
+        line: 'LimitMEMLOCK=infinity'
+      register: infinity
+      tags: ['elasticsearch', 'line']
+
+    - name: Reload the service
+      command: systemctl daemon-reload
+      when: infinity.changed == true
+      tags: ['elasticsearch', 'files', 'template']
 
     - name: "Configure elasticsearch.yml"
       template:
@@ -242,6 +245,15 @@
         src: files/elastic.j2
         dest: /etc/elasticsearch/elasticsearch.yml
       tags: ['elasticsearch', 'files', 'template']
+
+
+    - name: "Configure jvmoptions"
+      template:
+        backup: yes
+        src: files/jvmoption.j2
+        dest: /etc/elasticsearch/jvm.options
+      tags: ['elasticsearch', 'files', 'template']
+
 
     - name: Enable elasticsearch Service, and make sure it is running
       service:
@@ -276,3 +288,16 @@
         state: restarted
         enabled: yes
       tags: ['service', 'restart', 'never', 'kibana']
+
+- hosts: elk
+  gather_facts: no
+  become: true
+
+  tasks:
+    - name: Install Metric Beats, Packet Beats
+      package:
+        name: ['metricbeat', 'packetbeat', 'filebeat']
+        state: present 
+        update_cache: yes
+      tags: ['yum', 'packages', 'never', 'beats' ] 
+

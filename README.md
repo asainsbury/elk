@@ -88,11 +88,17 @@ xpack.management.pipeline.id: ["paloalto", "cisco"]
 
 Install Elasticsearch:
 To Do
-vim /etc/sysconfig/elasticsearch
-MAX_LOCKED_MEMORY=unlimited
+https://stackoverflow.com/questions/45008355/elasticsearch-process-memory-locking-failed
+https://github.com/sadsfae/ansible-elk/blob/master/install/roles/elasticsearch/tasks/main.yml
+https://github.com/elastic/ansible-elasticsearch/tree/master/templates
 
 
 Noticed tcp6 was binding to 9200. So downloaded the role to disable all IPv6, but that probably wasn't necessary, as I actually had to initialise the host to listen on a dedicated port, and put in a seed device, then all the service started, and nmap showed the listening port.
+
+{# FIPS mode is only allowed with a Platinum or Trial license
+xpack.security.fips_mode.enabled: true
+xpack.security.authc.password_hashing.algorithm: PBKDF2 #}  
+{# bootstrap.mlockall: true #}
 
 After running the initial setup, without configuration changes, you can check the status and health on each node:
 
