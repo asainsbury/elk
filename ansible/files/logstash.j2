@@ -1,0 +1,17 @@
+node.name: {{ inventory_hostname }}
+path.data: /app/logstash/data
+path.logs: /app/logstash/log
+pipeline.workers: 2
+pipeline.batch.size: 200
+pipeline.batch.delay: 50
+queue.type: memory
+config.test_and_exit: false
+log.level: debug
+config.reload.automatic: true
+config.reload.interval: 30s
+http.host: {{ inventory_hostname }}
+http.port: 9600-9700
+xpack.monitoring.enabled: true
+xpack.monitoring.elasticsearch.hosts: [ "elk2", "elk3", "elk4" ]
+xpack.monitoring.elasticsearch.sniffing: true
+xpack.monitoring.collection.interval: 10s

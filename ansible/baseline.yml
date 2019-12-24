@@ -152,17 +152,70 @@
         update_cache: yes
       tags: ['yum', 'packages', 'logstash']  
 
-    - name: Copy the logstash config file over, to stop runaway CPU
+    # - name: Copy the logstash config file over, to stop runaway CPU
+    #   copy:
+    #     src: files/logstash.conf
+    #     dest: /etc/logstash/conf.d/
+    #   tags: ['logstash', 'files']
+    - name: Creates directory
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: logstash
+        group: logstash
+        mode: '764'
+        recurse: yes
+      with_items:
+        - /app
+        - /app/logstash
+        - /app/logstash/data
+        - /app/logstash/log
+      tags: ['logstash', 'dir']
+
+    - name: Simple logstash beats file
       copy:
-        src: files/logstash.conf
-        dest: /etc/logstash/conf.d/
+        src: files/beats.conf
+        dest: /etc/logstash/conf.d
       tags: ['logstash', 'files']
 
-    - name: Simple logstash config file
+    - name: Simple logstash pipline file
       copy:
-        src: files/logstash.yml
-        dest: /etc/logstash/
+        src: files/piplines.j2
+        dest: /etc/logstash/pipelines.yml
       tags: ['logstash', 'files']
+
+
+    - name: "Configure logstash.yml"
+      template:
+        backup: yes
+        src: files/logstash.j2
+        dest: /etc/logstash/logstash.yml
+      tags: ['logstash', 'files', 'template']
+
+
+    - name: logstash JVM Specific setting for v11 
+      # https://www.elastic.co/guide/en/logstash/current/troubleshooting.html
+      # Stops the error messages from appearing on the start of the service
+      blockinfile:
+        state: present
+        path: /etc/logstash/jvm.options
+        block: |
+          -Xms2g
+          -Xmx2g
+          --add-opens=java.base/java.lang=ALL-UNNAMED
+          --add-opens=java.base/java.security=ALL-UNNAMED
+          --add-opens=java.base/java.util=ALL-UNNAMED
+          --add-opens=java.base/java.security.cert=ALL-UNNAMED
+          --add-opens=java.base/java.util.zip=ALL-UNNAMED
+          --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+          --add-opens=java.base/java.util.regex=ALL-UNNAMED
+          --add-opens=java.base/java.net=ALL-UNNAMED
+          --add-opens=java.base/java.io=ALL-UNNAMED
+          --add-opens=java.base/java.lang=ALL-UNNAMED
+          --add-opens=java.base/javax.crypto=ALL-UNNAMED
+          --add-opens=java.management/sun.management=ALL-UNNAMED
+
+      tags: ['logstash', 'files', 'jvmoptions']
 
     - name: Enable logstash Service, and make sure it is running
       service:
@@ -301,3 +354,20 @@
         update_cache: yes
       tags: ['yum', 'packages', 'never', 'beats' ] 
 
+    # - name: Enable metric beats
+    #   command: /usr/share/metricbeat/bin/./metricbeat modules enable logstash
+    #   tags: ['beats', 'files', 'template']
+
+    - name: "Configure Metric.yml"
+      template:
+        backup: yes
+        src: files/metric.j2
+        dest: /etc/metricbeat/metricbeat.yml
+      tags: ['beats', 'files', 'template']
+
+    - name: Enable metricbeat Service, and make sure it is running
+      service:
+        name: metricbeat
+        state: restarted
+        enabled: yes
+      tags: ['service', 'restart', 'never', 'beats']

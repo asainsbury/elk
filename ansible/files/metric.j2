@@ -1,0 +1,29 @@
+metricbeat.modules:
+- module: system
+  metricsets:
+    - cpu             # CPU usage
+    - load            # CPU load averages
+    - memory          # Memory usage
+    - network         # Network IO
+    - process         # Per process metrics
+    - process_summary # Process summary
+    - uptime          # System Uptime
+    - socket_summary  # Socket summary
+    - core            # Per CPU core usage
+    - diskio          # Disk IO
+    - filesystem      # File system usage for each mountpoint
+    - fsstat          # File system summary metrics
+    #- raid            # Raid
+    - socket          # Sockets and connection info (linux only)
+  enabled: true
+  period: 10s
+  processes: ['.*']
+
+  # Configure the metric types that are included by these metricsets.
+  cpu.metrics:  ["percentages"]  # The other available options are normalized_percentages and ticks.
+  core.metrics: ["percentages"] 
+
+output.logstash:
+  hosts: ["elk1:5044"]
+
+setup.kibana.host: "http://elk5:5601"

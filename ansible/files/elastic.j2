@@ -10,6 +10,7 @@ discovery.zen.ping.unicast.hosts: ["elk2", "elk3", "elk4"]
 discovery.zen.fd.ping_timeout: 10s
 discovery.zen.minimum_master_nodes: 2
 xpack.monitoring.collection.enabled: true
+logger.org.elasticsearch.transport: debug
 {# xpack.security.enabled: true
 xpack.security.transport.ssl.enabled: true #}
 bootstrap.memory_lock: true
